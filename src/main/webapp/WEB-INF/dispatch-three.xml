@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+<!--선언적 트랜잭션: annotation을 이용한 트랜잭션 처리  -->
+
+<!--[1] DataSource 빈 선언  -->
+<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<property name="driverClassName" value="oracle.jdbc.OracleDriver"/>
+<property name="url" value="jdbc:oracle:thin:@127.0.0.1:1521:xe"/>
+<property name="username" value="hr"/>
+<property name="password" value="a1234"/>
+
+</bean>
+
+<!--[2] SqlSessionFactoryBean 빈 선언  -->
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+<property name="dataSource" ref="dataSource"/>
+<property name="mapperLocations" value="classpath:config/memMapper.xml"/>
+
+</bean>
+
+<!--[3] SqlSessionTemplate 빈 선언  -->
+<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+<constructor-arg ref="sqlSessionFactory"/>
+</bean>
+
+
+<!--Spring JDBC나 Mybatis를 이용해서 DB 연동을 처리하는 경우
+DataSourceTransactionManager가 트랜잭션 관리자로 사용된다
+  -->
+<!--[4] TransactionManager 빈 선언  -->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+<property name="dataSource" ref="dataSource"/>
+</bean>
+
+<!--[5] 선언적 트랜잭션 : annotaion을 이용한 트랜잭션 처리  -->
+<tx:annotation-driven transaction-manager="transactionManager"/>
+
+<!--[6] MemDaoImp 빈 선언  -->
+<bean id="dao" class="model.MemDAOImp">
+<property name="sqlSession" ref="sqlSession"/>
+</bean>
+
+
+<!--[7] ServiceImp 빈 선언  -->
+<bean id="service" class="part03.ServiceImp">
+<property name="dao" ref="dao"/>
+
+</bean>
+
+<!--[8] MainController 빈 선언  -->
+<bean class="part03.MainController">
+<property name="svc" ref="service"></property>
+</bean>
+
+<!--[9] View 빈 선언  -->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/views/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+</beans>
